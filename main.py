@@ -1,17 +1,14 @@
-from utils import weather
-from utils import tapo_control
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-class TapoBaseModel(BaseModel):
-    device_name:str
-    action:str
-
+from utils import weather, tapo_control
 
 app = FastAPI()
 
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,9 +17,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+templates = Jinja2Templates(directory="templates")
+
+
+class TapoBaseModel(BaseModel):
+    device_name: str
+    action: str
+
+
+@app.get("/")
+async def serve_dashboard(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="index.html"
+    )
+
+
 @app.get("/api/weather/{city}")
-async def get_current_weather(city:str):
-    return {"temperature":await weather.get_temperature(city)}
+async def get_current_weather(city: str):
+    return {"temperature": await weather.get_temperature(city)}
+
 
 @app.post("/api/tapo/control")
 async def control_tapo(tapo: TapoBaseModel):
@@ -32,12 +47,10 @@ async def control_tapo(tapo: TapoBaseModel):
         elif tapo.action == "turn_off":
             await tapo_control.DeviceFactory.turn_off(tapo.device_name)
 
-        return {"code": 200, "message":"The action has sended succesfull"}
+        return {"code": 200, "message": "Action executed successfully"}
+    except Exception as e:
+        return {"code": 500, "message": f"Error: {str(e)}"}
 
-    except:
-        return {"code": 404, "message":"An error has occured during the send of the action"}
-
-    
 
 if __name__ == "__main__":
     uvicorn.run(app=app, host="0.0.0.0", port=8080)
