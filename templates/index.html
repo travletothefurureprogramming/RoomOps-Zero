@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoomOps Zero</title>
+</head>
+<body>
+    <h1>RoomOps Zero</h1>
+
+    <p id="temperature">Current Temperature: n/a</p>
+
+    <button onclick="turn_on_led_strip()">Turn On Led Strip</button>
+    
+    <button onclick="turn_off_led_strip()">Turn Off Led Strip</button>
+
+
+    <script>
+
+        async function fetchWeather() {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/weather/kavala');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json(); //[cite: 1]
+                const temperature = data.temperature; //[cite: 1, 3]
+
+                console.log(`Temperature: ${temperature}°C`);
+                return temperature;
+            } catch (error) {
+                console.error('Error fetching weather:', error);
+            }
+        }
+
+        async function set_weather() {
+            let temperatureElement = document.getElementById("temperature");
+
+            // Περιμένουμε το Promise να επιλυθεί
+            const temp = await fetchWeather(); 
+
+            if (temp !== undefined) {
+                temperatureElement.innerHTML = "Current Temperature: " + temp + "°C";
+            } else {
+                temperatureElement.innerHTML = "Temperature unavailable";
+            }
+        }
+
+        async function turn_on_led_strip() {
+            fetch("http://127.0.0.1:8080/api/tapo/control", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    device_name: "l900",
+                    action: "turn_on"
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error("Error:", error));
+
+        }
+
+        async function turn_off_led_strip() {
+            fetch("http://127.0.0.1:8080/api/tapo/control", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    device_name: "l900",
+                    action: "turn_off"
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error("Error:", error));
+
+        }
+
+        set_weather();
+
+        setInterval(set_weather, 600000);
+
+    </script>
+
+</body>
+</html>

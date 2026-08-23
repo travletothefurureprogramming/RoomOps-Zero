@@ -1,6 +1,7 @@
 from utils import weather
 from utils import tapo_control
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
@@ -11,9 +12,17 @@ class TapoBaseModel(BaseModel):
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/api/weather/{city}")
 async def get_current_weather(city:str):
-    return await weather.get_temperature(city)
+    return {"temperature":await weather.get_temperature(city)}
 
 @app.post("/api/tapo/control")
 async def control_tapo(tapo: TapoBaseModel):
