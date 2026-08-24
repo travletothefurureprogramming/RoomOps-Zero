@@ -3,8 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-
-from utils import weather, tapo_control
+from services import weather, tapo_control
 
 app = FastAPI()
 
