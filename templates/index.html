@@ -91,6 +91,44 @@
         .btn-off:hover {
             background-color: #b91c1c;
         }
+
+        .tv-news-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid #334155;
+            border-left: 4px solid #38bdf8;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .news-badge {
+            background: #0284c7;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .news-timer {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .news-headline {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: #f1f5f9;
+            line-height: 1.4;
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -110,6 +148,16 @@
         <div class="controls">
             <button class="btn" onclick="toggleLed('turn_on')">Turn On Light</button>
             <button class="btn btn-off" onclick="toggleLed('turn_off')">Turn Off Light</button>
+        </div>
+
+        <div class="tv-news-card">
+            <div class="news-header">
+                <span class="news-badge">LATEST NEWS</span>
+                <span id="news-timer">10s</span>
+            </div>
+
+            <div id="news-headline" class="news-headline">Φόρτωση ειδήσεων...</div>
+
         </div>
     </div>
 
@@ -149,10 +197,43 @@
             }
         }
 
+        let newsArticles = [];
+        let currentNewsIndex = 0;
+
+        async function fetchNews() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/news/kavala`);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                if (data.news && data.news.length > 0) {
+                    newsArticles = data.news;
+                    showNextNews();
+                }
+            } catch (err) {
+                document.getElementById('news-headline').innerText = 'Εκτός σύνδεσης';
+            }
+        }
+
+        function showNextNews() {
+            if (newsArticles.length === 0) return;
+            
+            const headlineEl = document.getElementById('news-headline');
+            headlineEl.style.opacity = 0; 
+            
+            setTimeout(() => {
+                headlineEl.innerText = newsArticles[currentNewsIndex];
+                headlineEl.style.opacity = 1; 
+                currentNewsIndex = (currentNewsIndex + 1) % newsArticles.length;
+            }, 500);
+        }
+
+        setInterval(showNextNews, 12000);
+        setInterval(fetchNews, 1200000);
         setInterval(updateClock, 1000);
         setInterval(fetchWeather, 600000);
         updateClock();
         fetchWeather();
+        fetchNews();
     </script>
 </body>
 </html>

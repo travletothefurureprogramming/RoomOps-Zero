@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
-from services import weather, tapo_control
+from services import weather, tapo_control, news
 
 app = FastAPI()
 
@@ -33,8 +33,12 @@ async def serve_dashboard(request: Request):
 
 
 @app.get("/api/weather/{city}")
-async def get_current_weather(city: str):
+async def get_current_weather(city:str="Kavala"):
     return {"temperature": await weather.get_temperature(city)}
+
+@app.get("/api/news/{city}")
+async def get_curennt_news(city:str | None = None):
+    return {"news": news.get_current_news(city)}
 
 
 @app.post("/api/tapo/control")
