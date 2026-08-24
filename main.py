@@ -7,7 +7,6 @@ from services import weather, tapo_control
 
 app = FastAPI()
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
