@@ -16,7 +16,6 @@ SECURITY_PIN = os.getenv("SECURITY_PIN")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Εκκίνηση του αέναου scrolling loop στο παρασκήνιο
     asyncio.create_task(matrix.start_matrix_loop())
     yield
 
@@ -67,7 +66,7 @@ async def control_tapo(tapo: TapoBaseModel):
 async def arm():
     global armed
     armed = True
-    matrix.set_text("ARMED")  # Ενημέρωση LED Matrix
+    matrix.set_text("ARMED  ")  
     print("[SECURITY] System ARMED via Action Block / API!")
     return {"status": "success", "system_armed": True}
 
@@ -76,7 +75,7 @@ async def verify_pin(data: PinModel):
     global armed
     if data.pin == SECURITY_PIN:
         armed = False
-        matrix.set_text("DISARMED")  # Ενημέρωση LED Matrix
+        matrix.set_text("DISARMED  ")  
         print("[SECURITY] System DISARMED via Valid PIN!")
         return {"status": "success", "correct": True, "system_armed": False}
     else:
@@ -87,7 +86,7 @@ async def verify_pin(data: PinModel):
 async def disarm():
     global armed
     armed = False
-    matrix.set_text("DISARMED")  # Ενημέρωση LED Matrix
+    matrix.set_text("DISARMED  ")
     print("[SECURITY] System DISARMED via Direct API!")
     return {"status": "success", "system_armed": False}
 
@@ -112,7 +111,7 @@ async def check_motion():
 
     has_motion = await camera.motion_detector.detect_motion()
     if has_motion:
-        matrix.set_text("ALERT! MOTION DETECTED")  # Ενημέρωση LED Matrix
+        matrix.set_text("ALERT!   MOTION   DETECTED  ")  
         notifier.send_notification()
         volume.set_volume(100)
         await tapo_control.DeviceFactory.turn_on("l900")
