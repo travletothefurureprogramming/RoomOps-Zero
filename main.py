@@ -7,7 +7,8 @@ from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 from services import weather, tapo_control, news, camera
-from utils import notifier, volume
+from utils import notifier, volume, matrix
+import asyncio
 
 load_dotenv()
 SECURITY_PIN = os.getenv("SECURITY_PIN")  
@@ -31,6 +32,10 @@ class TapoBaseModel(BaseModel):
 
 class PinModel(BaseModel):
     pin: str
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(matrix.write_text(f"Temperature: {await weather.get_temperature("Kavala")}"))
 
 @app.get("/")
 async def serve_dashboard(request: Request):
