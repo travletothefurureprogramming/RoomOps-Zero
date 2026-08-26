@@ -9,4 +9,3 @@ async def write_text(text:str):
         sphd.scroll(1)
         await asyncio.sleep(0.05)
 
-asyncio.run(write_text("Hello World!"))
