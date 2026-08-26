@@ -1,4 +1,6 @@
 import os
+import asyncio
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
@@ -8,11 +10,20 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from services import weather, tapo_control, news, camera
 from utils import notifier, volume, matrix
-import asyncio
 
 load_dotenv()
-SECURITY_PIN = os.getenv("SECURITY_PIN")  
-app = FastAPI(title="Edge-AI Home Hub")
+SECURITY_PIN = os.getenv("SECURITY_PIN") 
+
+# Σωστός χειρισμός Lifespan Events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Εκτέλεση κατά την εκκίνηση
+    temp = await weather.get_temperature("Kavala")
+    asyncio.create_task(matrix.write_text(f"Temperature: {temp}"))
+    yield
+    # Shutdown: Εκτελείται όταν κλείνει η εφαρμογή (αν χρειάζεται cleanup)
+
+app = FastAPI(title="Edge-AI Home Hub", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,10 +43,6 @@ class TapoBaseModel(BaseModel):
 
 class PinModel(BaseModel):
     pin: str
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(matrix.write_text(f"Temperature: {await weather.get_temperature("Kavala")}"))
 
 @app.get("/")
 async def serve_dashboard(request: Request):
@@ -109,7 +116,7 @@ async def check_motion():
         notifier.send_notification()
         volume.set_volume(100)
         await tapo_control.DeviceFactory.turn_on("l900")
-        await tapo_control.DeviceFactory.set_colour("l900","red")
+        await tapo_control.DeviceFactory.set_colour("l900", "red")
 
     return {
         "motion": has_motion,
