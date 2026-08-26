@@ -1,4 +1,7 @@
 import pyvolume
 
 def set_volume(percent):
-    pyvolume.custom(percent)
+    try:
+        pyvolume.custom(percent)
+    except:
+        print("Cant maximize the volume!")
