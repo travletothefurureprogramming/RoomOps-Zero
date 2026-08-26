@@ -14,14 +14,11 @@ from utils import notifier, volume, matrix
 load_dotenv()
 SECURITY_PIN = os.getenv("SECURITY_PIN") 
 
-# Σωστός χειρισμός Lifespan Events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Εκτέλεση κατά την εκκίνηση
-    temp = await weather.get_temperature("Kavala")
-    asyncio.create_task(matrix.write_text(f"Temperature: {temp}"))
+    # Εκκίνηση του αέναου scrolling loop στο παρασκήνιο
+    asyncio.create_task(matrix.start_matrix_loop())
     yield
-    # Shutdown: Εκτελείται όταν κλείνει η εφαρμογή (αν χρειάζεται cleanup)
 
 app = FastAPI(title="Edge-AI Home Hub", lifespan=lifespan)
 
@@ -34,7 +31,6 @@ app.add_middleware(
 )
 
 armed = False
-
 templates = Jinja2Templates(directory="templates")
 
 class TapoBaseModel(BaseModel):
@@ -71,6 +67,7 @@ async def control_tapo(tapo: TapoBaseModel):
 async def arm():
     global armed
     armed = True
+    matrix.set_text("ARMED")  # Ενημέρωση LED Matrix
     print("[SECURITY] System ARMED via Action Block / API!")
     return {"status": "success", "system_armed": True}
 
@@ -79,6 +76,7 @@ async def verify_pin(data: PinModel):
     global armed
     if data.pin == SECURITY_PIN:
         armed = False
+        matrix.set_text("DISARMED")  # Ενημέρωση LED Matrix
         print("[SECURITY] System DISARMED via Valid PIN!")
         return {"status": "success", "correct": True, "system_armed": False}
     else:
@@ -89,6 +87,7 @@ async def verify_pin(data: PinModel):
 async def disarm():
     global armed
     armed = False
+    matrix.set_text("DISARMED")  # Ενημέρωση LED Matrix
     print("[SECURITY] System DISARMED via Direct API!")
     return {"status": "success", "system_armed": False}
 
@@ -113,6 +112,7 @@ async def check_motion():
 
     has_motion = await camera.motion_detector.detect_motion()
     if has_motion:
+        matrix.set_text("ALERT! MOTION DETECTED")  # Ενημέρωση LED Matrix
         notifier.send_notification()
         volume.set_volume(100)
         await tapo_control.DeviceFactory.turn_on("l900")
