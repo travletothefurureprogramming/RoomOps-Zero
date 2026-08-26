@@ -17,7 +17,7 @@ async def start_matrix_loop():
         sphd.show()
         sphd.scroll(1)
         await asyncio.sleep(0.05)
-    set_text(f"{await get_temperature("Kavala")}C")
+    set_text(f"{await get_temperature("Kavala")}C          ")
     while True:
         sphd.show()
         sphd.scroll(1)
