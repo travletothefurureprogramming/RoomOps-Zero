@@ -2,6 +2,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from tapo import ApiClient
+from tapo.requests import Color
 
 load_dotenv(".env")
 
@@ -42,6 +43,16 @@ class L900:
             await self.connect()
         await self.device.off()
 
+    async def set_colour(self,colour):
+        if not self.device:
+            await self.connect()
+        if colour == "red":
+            await self.device.set_color(Color.OrangeRed)
+        elif colour == "blue":
+            await self.device.set_color(Color.LightSkyBlue)
+        elif colour == "green":
+            await self.device.set_color(Color.LightGreen)
+
 
 class L535:
     _instance = None
@@ -68,6 +79,18 @@ class L535:
         if not self.device:
             await self.connect()
         await self.device.off()
+
+    
+    async def set_colour(self,colour):
+        if not self.device:
+            await self.connect()
+        if colour == "red":
+            await self.device.set_color(Color.DarkRed)
+        elif colour == "blue":
+            await self.device.set_color(Color.LightSkyBlue)
+        elif colour == "green":
+            await self.device.set_color(Color.LightGreen)
+
 
 
 class DeviceFactory:
@@ -96,6 +119,23 @@ class DeviceFactory:
             await dev.connect()
             await dev.turn_off()
             return dev
+
+    @staticmethod
+    async def set_colour(device_name: str,colour):
+        if device_name.lower() == "l900":
+            dev = L900()
+            await dev.connect()
+            await dev.set_colour(colour)
+            return dev
+        elif device_name.lower() == "l535":
+            dev = L535()
+            await dev.connect()
+            await dev.set_colour(colour)
+            return dev
+        
+
+
+
 
 
 async def main():

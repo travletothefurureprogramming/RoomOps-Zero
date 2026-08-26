@@ -21,6 +21,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            position: relative;
         }
 
         .dashboard-container {
@@ -31,6 +32,47 @@
             width: 100%;
             max-width: 500px;
             text-align: center;
+        }
+
+        /* Banner Ενεργοποίησης Ήχου */
+        .audio-unlock-banner {
+            background: #f59e0b;
+            color: #0f172a;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .audio-unlock-banner.unlocked {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border-color: #10b981;
+            box-shadow: none;
+            justify-content: center;
+        }
+
+        .btn-unlock {
+            background: #0f172a;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn-unlock:hover {
+            background: #1e293b;
         }
 
         .top-bar {
@@ -58,39 +100,52 @@
             color: #f59e0b;
         }
 
+        .security-status-bar {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .status-armed { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .status-disarmed { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+
         .controls {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
 
         .btn {
             background-color: #2563eb;
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
+            padding: 12px 20px;
+            font-size: 0.95rem;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
+            flex: 1;
+            min-width: 120px;
         }
 
-        .btn:hover {
-            background-color: #1d4ed8;
-        }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+        .btn-off { background-color: #dc2626; }
+        .btn-off:hover { background-color: #b91c1c; }
 
-        .btn-off {
-            background-color: #dc2626;
-        }
+        .btn-arm { background-color: #7c3aed; }
+        .btn-arm:hover { background-color: #6d28d9; }
 
-        .btn-off:hover {
-            background-color: #b91c1c;
-        }
+        .btn-disarm { background-color: #059669; }
+        .btn-disarm:hover { background-color: #047857; }
 
         .tv-news-card {
             background: rgba(30, 41, 59, 0.7);
@@ -98,7 +153,6 @@
             border-left: 4px solid #38bdf8;
             padding: 16px 20px;
             border-radius: 12px;
-            margin-top: 20px;
         }
 
         .news-header {
@@ -117,11 +171,6 @@
             letter-spacing: 1px;
         }
 
-        .news-timer {
-            color: #64748b;
-            font-size: 0.8rem;
-        }
-
         .news-headline {
             font-size: 1.15rem;
             font-weight: 500;
@@ -129,11 +178,80 @@
             line-height: 1.4;
             transition: opacity 0.5s ease-in-out;
         }
+
+        /* Red Flash Overlay */
+        .alarm-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .alarm-overlay.active {
+            opacity: 1; pointer-events: auto;
+            animation: redFlash 0.8s infinite continuous;
+        }
+
+        @keyframes redFlash {
+            0% { background-color: rgba(220, 38, 38, 0.95); }
+            50% { background-color: rgba(15, 23, 42, 0.95); }
+            100% { background-color: rgba(220, 38, 38, 0.95); }
+        }
+
+        .alarm-box {
+            background: #1e293b;
+            border: 2px solid #ef4444;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .alarm-box h2 {
+            color: #ef4444;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.4rem;
+            text-align: center;
+            letter-spacing: 8px;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background: #0f172a;
+            color: #fff;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .pin-input:focus { border-color: #38bdf8; }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
+        
+        <!-- Κουμπί Ενεργοποίησης Ήχου -->
+        <div id="audio-banner" class="audio-unlock-banner">
+            <span>⚠️ Πατήστε για ενεργοποίηση ήχου</span>
+            <button class="btn-unlock" onclick="enableAudioSystem()">ΕΝΕΡΓΟΠΟΙΗΣΗ</button>
+        </div>
+
         <header class="top-bar">
             <div class="time-widget">
                 <h1 id="clock">00:00</h1>
@@ -145,6 +263,15 @@
             </div>
         </header>
 
+        <div id="system-status-bar" class="security-status-bar status-disarmed">
+            SYSTEM DISARMED
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-arm" onclick="armSystem()">ARM SYSTEM</button>
+            <button class="btn btn-disarm" onclick="openDisarmModal()">DISARM SYSTEM</button>
+        </div>
+
         <div class="controls">
             <button class="btn" onclick="toggleLed('turn_on')">Turn On Light</button>
             <button class="btn btn-off" onclick="toggleLed('turn_off')">Turn Off Light</button>
@@ -153,16 +280,143 @@
         <div class="tv-news-card">
             <div class="news-header">
                 <span class="news-badge">LATEST NEWS</span>
-                <span id="news-timer">10s</span>
             </div>
-
             <div id="news-headline" class="news-headline">Φόρτωση ειδήσεων...</div>
+        </div>
+    </div>
 
+    <!-- Alarm Audio -->
+    <audio id="alarm-sound" src="/static/alarm.mp3" preload="auto"></audio>
+
+    <!-- Overlay & Keypad Modal -->
+    <div id="alarm-overlay" class="alarm-overlay">
+        <div class="alarm-box">
+            <h2>🚨 SECURITY BREACH 🚨</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">Εισάγετε τον κωδικό PIN για απενεργοποίηση:</p>
+            
+            <input type="password" id="pin-code" class="pin-input" maxlength="8" placeholder="••••" autocomplete="off">
+            <div id="pin-error" class="error-msg">Λάθος Κωδικός PIN!</div>
+
+            <button class="btn btn-off" style="width: 100%;" onclick="submitPin()">DISARM</button>
         </div>
     </div>
 
     <script>
         const API_BASE_URL = window.location.origin;
+        let lastAlertTimestamp = null;
+        let isAlarmActive = false;
+        let audioUnlocked = false;
+
+        const alarmSound = document.getElementById('alarm-sound');
+        const alarmOverlay = document.getElementById('alarm-overlay');
+        const statusBar = document.getElementById('system-status-bar');
+        const pinInput = document.getElementById('pin-code');
+        const pinError = document.getElementById('pin-error');
+        const audioBanner = document.getElementById('audio-banner');
+
+        // Ενεργοποίηση Ήχου & Speech Synthesis από το Κουμπί
+        function enableAudioSystem() {
+            alarmSound.play().then(() => {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+                audioUnlocked = true;
+                
+                // Ενημέρωση UI Banner
+                audioBanner.className = 'audio-unlock-banner unlocked';
+                audioBanner.innerHTML = '<span>🔊 AUDIO SYSTEM ACTIVE</span>';
+            }).catch(e => console.warn("Audio unlock error:", e));
+        }
+
+        // Κύκλος: MP3 -> English Speech -> MP3 ...
+        alarmSound.onended = () => {
+            if (isAlarmActive) {
+                speakWarningEnglish();
+            }
+        };
+
+        function speakWarningEnglish() {
+            if ('speechSynthesis' in window && isAlarmActive) {
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance("Motion detected. Warning, security breach!");
+                msg.lang = 'en-US';
+                msg.rate = 1.0;
+                
+                msg.onend = () => {
+                    if (isAlarmActive) {
+                        alarmSound.currentTime = 0;
+                        alarmSound.play().catch(e => console.warn(e));
+                    }
+                };
+
+                window.speechSynthesis.speak(msg);
+            } else if (isAlarmActive) {
+                alarmSound.currentTime = 0;
+                alarmSound.play().catch(e => console.warn(e));
+            }
+        }
+
+        function triggerAlarmSequence() {
+            isAlarmActive = true;
+            alarmOverlay.classList.add('active');
+            pinInput.focus();
+
+            if (audioUnlocked) {
+                alarmSound.currentTime = 0;
+                alarmSound.play().catch(e => console.warn(e));
+            }
+        }
+
+        function stopAlarmSequence() {
+            isAlarmActive = false;
+            alarmOverlay.classList.remove('active');
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            pinInput.value = '';
+            pinError.style.display = 'none';
+        }
+
+        async function submitPin() {
+            const enteredPin = pinInput.value;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/verify-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: enteredPin })
+                });
+                const data = await res.json();
+
+                if (data.correct) {
+                    stopAlarmSequence();
+                    pollMotion();
+                } else {
+                    pinError.style.display = 'block';
+                    pinInput.value = '';
+                }
+            } catch (err) {
+                console.error("PIN error:", err);
+            }
+        }
+
+        pinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitPin();
+        });
+
+        async function armSystem() {
+            try {
+                await fetch(`${API_BASE_URL}/api/arm`, { method: 'POST' });
+                pollMotion();
+            } catch (err) {
+                console.error("Arming error:", err);
+            }
+        }
+
+        function openDisarmModal() {
+            alarmOverlay.classList.add('active');
+            pinInput.focus();
+        }
 
         function updateClock() {
             const now = new Date();
@@ -173,27 +427,48 @@
         async function fetchWeather() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/weather/kavala`);
-                if (!response.ok) throw new Error('API Error');
+                if (!response.ok) throw new Error();
                 const data = await response.json();
-                
                 document.getElementById('temperature').innerText = `${data.temperature}°C`;
             } catch (err) {
-                console.error('Weather error:', err);
                 document.getElementById('temperature').innerText = '--°C';
             }
         }
 
         async function toggleLed(action) {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/tapo/control`, {
+                await fetch(`${API_BASE_URL}/api/tapo/control`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ device_name: 'l900', action: action })
                 });
-                const data = await res.json();
-                console.log('Action response:', data);
             } catch (err) {
                 console.error('Light control error:', err);
+            }
+        }
+
+        async function pollMotion() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/camera/check-motion`);
+                if (!res.ok) return;
+
+                const data = await res.json();
+
+                if (data.system_armed) {
+                    statusBar.innerText = "SYSTEM ARMED";
+                    statusBar.className = "security-status-bar status-armed";
+                } else {
+                    statusBar.innerText = "SYSTEM DISARMED";
+                    statusBar.className = "security-status-bar status-disarmed";
+                    if (isAlarmActive) stopAlarmSequence();
+                }
+
+                if (data.system_armed && data.motion && data.timestamp !== lastAlertTimestamp) {
+                    lastAlertTimestamp = data.timestamp;
+                    if (!isAlarmActive) triggerAlarmSequence();
+                }
+            } catch (err) {
+                console.warn("Polling error...");
             }
         }
 
@@ -216,12 +491,11 @@
 
         function showNextNews() {
             if (newsArticles.length === 0) return;
-            
             const headlineEl = document.getElementById('news-headline');
             headlineEl.style.opacity = 0; 
-            
             setTimeout(() => {
-                headlineEl.innerText = newsArticles[currentNewsIndex];
+                const item = newsArticles[currentNewsIndex];
+                headlineEl.innerText = item.title || item;
                 headlineEl.style.opacity = 1; 
                 currentNewsIndex = (currentNewsIndex + 1) % newsArticles.length;
             }, 500);
@@ -231,6 +505,8 @@
         setInterval(fetchNews, 1200000);
         setInterval(updateClock, 1000);
         setInterval(fetchWeather, 600000);
+        setInterval(pollMotion, 1000);
+
         updateClock();
         fetchWeather();
         fetchNews();
