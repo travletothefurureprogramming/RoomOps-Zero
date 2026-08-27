@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from playsound import playsound
 import uvicorn
 import random
-from laptop_services.tts import say
+from laptop.laptop_services.tts import say
 
 app = FastAPI()
 executor = ThreadPoolExecutor()
