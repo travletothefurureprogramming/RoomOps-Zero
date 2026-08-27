@@ -4,18 +4,11 @@ from fastapi import FastAPI
 from playsound import playsound
 import uvicorn
 import random
-import speech_recognition as sr
-
 from laptop_services.tts import say
-from laptop_utils import datetime, weather
 
 app = FastAPI()
 executor = ThreadPoolExecutor()
 
-recognizer = sr.Recognizer()
-microphone = sr.Microphone()
-stop_listening_fn = None
-is_speaking = False  
 
 def speak_with_mute(text: str):
     """Ρυθμίζει το flag ώστε να αγνοούνται οι εντολές όση ώρα μιλάει το TTS."""
@@ -26,104 +19,7 @@ def speak_with_mute(text: str):
     finally:
         is_speaking = False
 
-def speech_callback(recognizer, audio):
-    global is_speaking
-    
-    if is_speaking:
-        return
 
-    try:
-        text = recognizer.recognize_google(audio, language="el-GR")
-        print("[VOICE IN]: " + text)
-
-        text_lower = text.lower()
-        
-        if any(w in text_lower for w in ["ώρα", "ώρες", "τι ώρα"]):
-            time_str = datetime.get_current_time()
-            responses = [
-                f"Η ώρα είναι {time_str}.",
-                f"Αυτή τη στιγμή η ώρα είναι {time_str}.",
-                f"Είναι ακριβώς {time_str}.",
-                f"Τσεκάρισα το ρολόι, είναι {time_str}."
-            ]
-            speak_with_mute(random.choice(responses))
-
-        elif any(w in text_lower for w in ["ημερομηνία", "μέρα", "σήματα", "ποια μέρα"]):
-            date_str = datetime.get_current_date()
-            responses = [
-                f"Σήμερα είναι {date_str}.",
-                f"Έχουμε {date_str}.",
-                f"Το ημερολόγιο δείχνει {date_str}."
-            ]
-            speak_with_mute(random.choice(responses))
-
-        elif any(w in text_lower for w in ["καιρός", "καιρό", "θερμοκρασία", "ζέστη", "κρύο"]):
-            weather_data = weather.get_weather()
-            temperature = weather_data.get("temperature", 20) if isinstance(weather_data, dict) else 20
-            
-            if temperature > 28:
-                options = [
-                    f"Έχει πολλή ζέστη σήμερα, η θερμοκρασία είναι στους {int(temperature)} βαθμούς.",
-                    f"Καίει ο ήλιος! Βλέπω {int(temperature)} βαθμούς Κελσίου.",
-                    f"Ζεστή μέρα, είμαστε στους {int(temperature)} βαθμούς."
-                ]
-            elif temperature > 20:
-                options = [
-                    f"Ο καιρός είναι υπέροχος, γύρω στους {int(temperature)} βαθμούς.",
-                    f"Πολύ γλυκός καιρός, η θερμοκρασία είναι στους {int(temperature)} βαθμούς.",
-                    f"Ιδανική θερμοκρασία, έχουμε {int(temperature)} βαθμούς."
-                ]
-            elif temperature > 12:
-                options = [
-                    f"Έχει λίγη δροσιά, η θερμοκρασία είναι στους {int(temperature)} βαθμούς.",
-                    f"Δεν κάνει πολύ κρύο, είμαστε στους {int(temperature)} βαθμούς.",
-                    f"Ο καιρός είναι δροσερός, στους {int(temperature)} βαθμούς."
-                ]
-            else:
-                options = [
-                    f"Κάνει αρκετό κρύο, η θερμοκρασία έπεσε στους {int(temperature)} βαθμούς.",
-                    f"Ντύσου καλά, έχουμε μόλις {int(temperature)} βαθμούς.",
-                    f"Παγωνιά σήμερα, το θερμόμετρο δείχνει {int(temperature)} βαθμούς."
-                ]
-            speak_with_mute(random.choice(options))
-
-        elif any(w in text_lower for w in ["γεια", "γειά", "γεια σου", "χαιρέτα", "τι κάνεις", "πώς είσαι"]):
-            greetings = [
-                "Γεια σου! Όλα καλά, εσύ πώς είσαι;",
-                "Γεια! Είμαι έτοιμος να σε βοηθήσω.",
-                "Χαίρετε! Όλα λειτουργούν στην εντέλεια.",
-                "Γεια σου! Τι σχεδιάζουμε για σήμερα;"
-            ]
-            speak_with_mute(random.choice(greetings))
-
-        elif any(w in text_lower for w in ["ποιος είσαι", "τι είσαι", "όνομα"]):
-            identity_responses = [
-                "Είμαι ο προσωπικός σου ψηφιακός βοηθός!",
-                "Είμαι το έξυπνο σύστημα του σπιτιού σου.",
-                "Είμαι ο βοηθός σου, πάντα εδώ για να σε διευκολύνω."
-            ]
-            speak_with_mute(random.choice(identity_responses))
-
-    except sr.UnknownValueError:
-        pass
-    except sr.RequestError as e:
-        print(f"[SPEECH ERROR]: {e}")
-
-@app.on_event("startup")
-def startup_event():
-    global stop_listening_fn
-    print("[SERVER] Calibrating microphone...")
-    with microphone as source:
-        recognizer.adjust_for_ambient_noise(source, duration=1)
-    
-    print("[SERVER] Starting background speech listener...")
-    stop_listening_fn = recognizer.listen_in_background(microphone, speech_callback)
-
-@app.on_event("shutdown")
-def shutdown_event():
-    global stop_listening_fn
-    if stop_listening_fn:
-        stop_listening_fn(wait_for_stop=False)
 
 def build_morning_script(temperature: float) -> str:
     greet_options = [
