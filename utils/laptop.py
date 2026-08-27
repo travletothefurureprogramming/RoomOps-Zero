@@ -1,14 +1,26 @@
-import requests
+import httpx
 
-def say(text:str):
-    requests.get(f"http://192.168.1.18:9000/api/say/{text}")
+LAPTOP_URL = "http://192.168.1.18:9000"
 
-def alarm():
-    requests.get(f"http://192.168.1.18:9000/api/alarm")
+client = httpx.AsyncClient(
+    base_url=LAPTOP_URL,
+    timeout=3.0
+)
 
-def stop_alarm():
-    requests.get(f"http://192.168.1.18:9000/api/alarm/stop")
 
-def morning(temperature:float):
-    requests.get(f"http://192.168.1.18:9000/api/assistant/start-morning-brief/{temperature}")
+async def say(text: str):
+    await client.get(f"/api/say/{text}")
 
+
+async def alarm():
+    await client.get("/api/alarm")
+
+
+async def stop_alarm():
+    await client.get("/api/alarm/stop")
+
+
+async def morning(temperature: float):
+    await client.get(
+        f"/api/assistant/start-morning-brief/{temperature}"
+    )
