@@ -91,6 +91,7 @@ async def disarm():
     armed = False
     matrix.set_text("DISARMED  ")
     laptop.say("Το σύστημα αφοπλιστικε")
+    laptop.stop_alarm()
     print("[SECURITY] System DISARMED via Direct API!")
     return {"status": "success", "system_armed": False}
 
