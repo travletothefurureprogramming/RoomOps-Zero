@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 from services import weather, tapo_control, news, camera
-from utils import notifier, volume, matrix
+from utils import notifier, laptop, matrix
 
 load_dotenv()
 SECURITY_PIN = os.getenv("SECURITY_PIN") 
@@ -56,8 +56,10 @@ async def control_tapo(tapo: TapoBaseModel):
     try:
         if tapo.action == "turn_on":
             await tapo_control.DeviceFactory.turn_on(tapo.device_name)
+            laptop.say(f"Το {tapo.device_name} ενεργοποιήθηκε επιτιχώς")
         elif tapo.action == "turn_off":
             await tapo_control.DeviceFactory.turn_off(tapo.device_name)
+            laptop.say(f"Το {tapo.device_name} απενεργοποιήθηκε επιτιχώς")
         return {"code": 200, "message": "Action executed successfully"}
     except Exception as e:
         return {"code": 500, "message": f"Error: {str(e)}"}
@@ -77,6 +79,7 @@ async def verify_pin(data: PinModel):
         armed = False
         matrix.set_text("DISARMED  ")  
         print("[SECURITY] System DISARMED via Valid PIN!")
+        laptop.say("Το σύστημα αφοπλιστικε")
         return {"status": "success", "correct": True, "system_armed": False}
     else:
         print("[SECURITY] Invalid PIN attempt!")
@@ -87,12 +90,14 @@ async def disarm():
     global armed
     armed = False
     matrix.set_text("DISARMED  ")
+    laptop.say("Το σύστημα αφοπλιστικε")
     print("[SECURITY] System DISARMED via Direct API!")
     return {"status": "success", "system_armed": False}
 
 @app.get("/api/status")
 async def get_system_status():
     global armed
+    laptop.say("Το σύστημα οπλίστικε")
     return {"system_armed": armed}
 
 os.makedirs("static", exist_ok=True)
@@ -113,7 +118,7 @@ async def check_motion():
     if has_motion:
         matrix.set_text("ALERT!   MOTION   DETECTED  ")  
         notifier.send_notification()
-        volume.set_volume(100)
+        laptop.alarm()
         await tapo_control.DeviceFactory.turn_on("l900")
         await tapo_control.DeviceFactory.set_colour("l900", "red")
 

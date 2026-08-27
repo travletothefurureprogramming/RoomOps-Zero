@@ -1,3 +1,4 @@
 *.env
 /services/__pycache__
 /static
+*.pyc
