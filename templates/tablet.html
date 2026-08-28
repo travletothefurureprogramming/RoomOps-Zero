@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mark Tablet Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090d16;
+            --card-bg: #131b2e;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --text: #f1f5f9;
+            --text-dim: #64748b;
+            --red: #ef4444;
+            --green: #22c55e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        /* Top Header & Avatar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .avatar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transition: all 0.3s ease;
+        }
+
+        .avatar.listening {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.8);
+            transform: scale(1.1);
+        }
+
+        .avatar.speaking {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.8);
+        }
+
+        .status-info h2 { font-size: 1.2rem; font-weight: 700; }
+        .status-info p { font-size: 0.85rem; color: var(--text-dim); }
+
+        /* Main Grid Buttons */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex: 1;
+        }
+
+        .btn-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn-card:active { transform: scale(0.96); background: rgba(255,255,255,0.05); }
+        .btn-card.danger { border-color: rgba(239, 68, 68, 0.3); color: var(--red); }
+        .btn-card.success { border-color: rgba(34, 197, 94, 0.3); color: var(--green); }
+
+        /* Live Transcript Display */
+        .transcript-container {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="avatar-wrap">
+            <div id="avatar" class="avatar"></div>
+            <div class="status-info">
+                <h2>MARK</h2>
+                <p id="status-text">IDLE</p>
+            </div>
+        </div>
+        <div id="clock" style="font-size: 1.4rem; font-weight: 700;">--:--</div>
+    </div>
+
+    <div class="grid">
+        <div class="btn-card success" onclick="sendAction('turn_on')">
+            <span>💡</span> Άναψε Φώτα
+        </div>
+        <div class="btn-card danger" onclick="sendAction('turn_off')">
+            <span>🌙</span> Σβήσε Φώτα
+        </div>
+        <div class="btn-card danger" onclick="armSystem()">
+            <span>🛡️</span> Όπλισε
+        </div>
+        <div class="btn-card" onclick="triggerInfo('weather')">
+            <span>🌤️</span> Καιρός
+        </div>
+    </div>
+
+    <div class="transcript-container" id="transcript">
+        Μικρόφωνο Tablet: Ενεργό
+    </div>
+
+    <script>
+        const WS_URI = `ws://${window.location.host}/ws/assistant`;
+        const ws = new WebSocket(WS_URI);
+
+        const avatar = document.getElementById('avatar');
+        const statusText = document.getElementById('status-text');
+        const transcript = document.getElementById('transcript');
+
+        // Ώρα
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('el-GR', {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
+        // Sync State από το Mark Backend
+        ws.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'assistant_state') {
+                    avatar.className = 'avatar ' + data.state;
+                    statusText.innerText = data.state.toUpperCase();
+                }
+            } catch (err) {}
+        };
+
+        // Αποστολή Εντολών
+        async function sendAction(action) {
+            await fetch('/api/tapo/control', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ device_name: 'l900', action: action })
+            });
+        }
+
+        async function armSystem() {
+            await fetch('/api/arm', { method: 'POST' });
+        }
+
+        async function triggerInfo(type) {
+            if (type === 'weather') await fetch('/api/weather/Kavala');
+        }
+
+        // Tablet Speech Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const rec = new SpeechRecognition();
+            rec.lang = 'el-GR';
+            rec.continuous = true;
+            rec.interimResults = false;
+
+            rec.onresult = (e) => {
+                const text = e.results[e.results.length - 1][0].transcript.trim();
+                transcript.innerText = "Tablet heard: " + text;
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'voice_command', text: text }));
+                }
+            };
+            rec.onend = () => rec.start();
+            rec.start();
+        }
+    </script>
+</body>
+</html>

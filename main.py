@@ -14,6 +14,25 @@ import uvicorn
 from services import weather, tapo_control, news, camera
 from utils import notifier, laptop, matrix
 
+from fastapi import WebSocket, WebSocketDisconnect
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
 
 # ============================================================
 # ENVIRONMENT
@@ -38,7 +57,6 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        # Stop Matrix loop when FastAPI shuts down
         matrix_task.cancel()
 
         try:
@@ -109,6 +127,24 @@ async def serve_dashboard(request: Request):
         request=request,
         name="index.html"
     )
+
+@app.get("/tablet")
+async def serve_tablet_dashboard(request: Request):
+    return templates.TemplateResponse(request=request, name="tablet.html")
+
+# ============================================================
+# ASSISTANT
+# ============================================================
+
+@app.websocket("/ws/assistant")
+async def websocket_assistant(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 # ============================================================

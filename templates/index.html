@@ -240,13 +240,51 @@
             margin-bottom: 10px;
             display: none;
         }
+
+        .assistant-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #0284c7;
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .assistant-avatar.listening {
+            background: #f59e0b;
+            animation: pulse-yellow 1.2s infinite;
+        }
+
+        .assistant-avatar.speaking {
+            background: #10b981;
+            animation: pulse-green 0.8s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.15); box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
+
+        <div id="assistant-avatar" class="assistant-avatar">
+            <span id="assistant-status" style="font-size: 0.8rem; font-weight: bold;">MARK</span>
+        </div>
         
-        <!-- Κουμπί Ενεργοποίησης Ήχου -->
         <div id="audio-banner" class="audio-unlock-banner">
             <span>⚠️ Πατήστε για ενεργοποίηση ήχου</span>
             <button class="btn-unlock" onclick="enableAudioSystem()">ΕΝΕΡΓΟΠΟΙΗΣΗ</button>
@@ -313,8 +351,26 @@
         const pinInput = document.getElementById('pin-code');
         const pinError = document.getElementById('pin-error');
         const audioBanner = document.getElementById('audio-banner');
+        const ws = new WebSocket(`ws://${window.location.host}/ws/assistant`);
 
-        // Ενεργοποίηση Ήχου & Speech Synthesis από το Κουμπί
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'assistant_state') {
+                const avatar = document.getElementById('assistant-avatar');
+                const statusText = document.getElementById('assistant-status');
+
+                avatar.className = 'assistant-avatar ' + data.state;
+
+                if (data.state === 'listening') {
+                    statusText.innerText = "Listening...";
+                } else if (data.state === 'speaking') {
+                    statusText.innerText = "Speaking...";
+                } else {
+                    statusText.innerText = "MARK";
+                }
+            }
+        };
+
         function enableAudioSystem() {
             alarmSound.play().then(() => {
                 alarmSound.pause();

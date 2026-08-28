@@ -3,3 +3,5 @@
 /static
 *.pyc
 laptop/static
+*.mp3
+*.wav
